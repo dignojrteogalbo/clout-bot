@@ -2,6 +2,7 @@ package main
 
 import (
 	"clout-bot/internal/handlers"
+	"clout-bot/internal/service"
 	"fmt"
 	"log"
 	"os"
@@ -19,6 +20,7 @@ const (
 var (
 	Token string
 	Bot *dg.Session
+	Service service.CloutService
 	err error
 )
 
