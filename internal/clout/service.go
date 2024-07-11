@@ -12,21 +12,23 @@ type (
 
 	service struct {
 		members map[string]Relationship
+		repo *Repository
 	}
 )
 
-var instance Service
+var serviceInstance Service
 
 func GetService() Service {
-	if instance == nil {
-		instance = newService()
+	if serviceInstance == nil {
+		serviceInstance = newService()
 	}
-	return instance
+	return serviceInstance
 }
 
 func newService() Service {
 	service := new(service)
 	service.members = make(map[string]Relationship)
+	service.repo = NewRepository()
 	return service
 }
 
@@ -45,6 +47,7 @@ func (s *service) UpsertRelationship(from *dg.User, to []*dg.User) {
 		}
 		relationship.AddRelationship(from)
 	}
+	s.repo.Upsert(from, to)
 }
 
 func (s *service) GetRelationships(user *dg.User) (r []*Relation) {

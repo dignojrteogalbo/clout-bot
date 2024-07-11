@@ -26,5 +26,7 @@ func mentionsExcludingIds(message *dg.Message, ids ...*dg.User) []*dg.User {
 func RecordMentions(s *dg.Session, m *dg.MessageCreate) {
 	service := clout.GetService()
 	mentions := mentionsExcludingIds(m.Message, s.State.User, m.Author)
-	service.UpsertRelationship(m.Author, mentions)
+	if len(mentions) > 0 {
+		service.UpsertRelationship(m.Author, mentions)
+	}
 }
