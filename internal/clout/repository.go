@@ -12,9 +12,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type Repository struct {
-	mongo *mongo.Client
-}
+type (
+	Repository struct {
+		mongo *mongo.Client
+	}
+
+	RelationDAO struct {
+		From string `bson:"from"`
+		To string `bson:"to"`
+		Count uint64 `bson:"count"`
+	}
+)
 
 func (r *Repository) getRelationshipsCollection() *mongo.Collection {
 	return r.mongo.Database("clout").Collection("relationships")
@@ -58,10 +66,30 @@ func bulkWriteRequest(from *dg.User, to []*dg.User) []mongo.WriteModel {
 func (r *Repository) Upsert(from *dg.User, to []*dg.User) {
 	relationships := r.getRelationshipsCollection()
 	request := bulkWriteRequest(from, to)
-	result, err := relationships.BulkWrite(context.Background(), request)
+	result, err := relationships.BulkWrite(context.TODO(), request)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(result)
 	}
+}
+
+func (r *Repository) GetMany(user *dg.User) []RelationDAO {
+	relationships := r.getRelationshipsCollection()
+	filter := &bson.M{
+		"to": user.ID,
+	}
+	cursor, err := relationships.Find(context.TODO(), filter)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	} else {
+		fmt.Println(cursor)
+	}
+	var relations []RelationDAO
+	if err = cursor.All(context.TODO(), &relations); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	return relations
 }

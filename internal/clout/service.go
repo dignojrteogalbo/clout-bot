@@ -11,7 +11,6 @@ type (
 	}
 
 	service struct {
-		members map[string]Relationship
 		repo *Repository
 	}
 )
@@ -27,36 +26,23 @@ func GetService() Service {
 
 func newService() Service {
 	service := new(service)
-	service.members = make(map[string]Relationship)
 	service.repo = NewRepository()
 	return service
 }
 
 func (s *service) UpsertRelationship(from *dg.User, to []*dg.User) {
-	var (
-		relationship Relationship
-		ok           bool
-	)
-	for _, t := range to {
-		if t == nil || from.ID == t.ID {
-			continue
-		}
-		if relationship, ok = s.members[t.ID]; !ok {
-			relationship = NewRelationship(t)
-			s.members[t.ID] = relationship
-		}
-		relationship.AddRelationship(from)
-	}
 	s.repo.Upsert(from, to)
 }
 
 func (s *service) GetRelationships(user *dg.User) (r []*Relation) {
-	var (
-		member Relationship
-		ok     bool
-	)
-	if member, ok = s.members[user.ID]; !ok {
+	relationDAO := s.repo.GetMany(user)
+	if relationDAO == nil {
 		return nil
 	}
-	return member.Relationships()
+	r = make([]*Relation, 0)
+	for _, i := range relationDAO {
+		relation := &Relation{&dg.User{ID: i.From}, uint(i.Count)}
+		r = append(r, relation)
+	}
+	return r
 }
