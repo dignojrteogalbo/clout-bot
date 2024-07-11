@@ -1,15 +1,13 @@
-package service
+package clout
 
 import (
-	"fmt"
-
 	dg "github.com/bwmarrin/discordgo"
 )
 
 type (
-	CloutService interface {
+	Service interface {
 		UpsertRelationship(from *dg.User, to []*dg.User)
-		GetRelationships(*dg.User) []*dg.User
+		GetRelationships(*dg.User) []*Relation
 	}
 
 	service struct {
@@ -17,16 +15,16 @@ type (
 	}
 )
 
-var instance CloutService
+var instance Service
 
-func GetService() CloutService {
+func GetService() Service {
 	if instance == nil {
 		instance = newService()
 	}
 	return instance
 }
 
-func newService() CloutService {
+func newService() Service {
 	service := new(service)
 	service.members = make(map[string]Relationship)
 	return service
@@ -35,21 +33,21 @@ func newService() CloutService {
 func (s *service) UpsertRelationship(from *dg.User, to []*dg.User) {
 	var (
 		relationship Relationship
-		ok bool
+		ok           bool
 	)
-	if relationship, ok = s.members[from.ID]; !ok {
-		relationship = NewRelationship(from)
-		s.members[from.ID] = relationship
-	}
 	for _, t := range to {
-		if t != nil && from.ID != t.ID {
-			relationship.AddRelationship(t)
+		if t == nil || from.ID == t.ID {
+			continue
 		}
+		if relationship, ok = s.members[t.ID]; !ok {
+			relationship = NewRelationship(t)
+			s.members[t.ID] = relationship
+		}
+		relationship.AddRelationship(from)
 	}
-	fmt.Println(relationship.Clout())
 }
 
-func (s *service) GetRelationships(user *dg.User) (r []*dg.User) {
+func (s *service) GetRelationships(user *dg.User) (r []*Relation) {
 	var (
 		member Relationship
 		ok     bool

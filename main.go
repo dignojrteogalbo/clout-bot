@@ -1,8 +1,8 @@
 package main
 
 import (
+	"clout-bot/internal/clout"
 	"clout-bot/internal/handlers"
-	"clout-bot/internal/service"
 	"fmt"
 	"log"
 	"os"
@@ -18,10 +18,10 @@ const (
 )
 
 var (
-	Token string
-	Bot *dg.Session
-	Service service.CloutService
-	err error
+	Token   string
+	Bot     *dg.Session
+	Service clout.Service
+	err     error
 )
 
 func init() {
@@ -39,7 +39,7 @@ func main() {
 	if Bot, err = dg.New("Bot " + Token); err != nil {
 		log.Fatal("failed to create Discord session: ", err)
 	}
-	Bot.AddHandler(handlers.ParseEvent)
+	Bot.AddHandler(handlers.HandleMessage)
 	Bot.Identify.Intents = dg.IntentsGuildMessages | dg.IntentsGuildMessageReactions
 	if err = Bot.Open(); err != nil {
 		log.Fatal("error opening connection: ", err)
@@ -50,4 +50,3 @@ func main() {
 	<-sc
 	Bot.Close()
 }
-
